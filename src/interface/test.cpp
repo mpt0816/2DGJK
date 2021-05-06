@@ -98,11 +98,11 @@ int main(int argc, char* argv[]) {
   bool check_trailer = false;
   int test_interface = 1; // 1, 2, 3, 4
 
-  toolbox::Collision collision;
+  toolbox::Collision<PathPoint> collision;
 
   cout << "<<----- test interface 01 ----->>" << endl;
   int idx_path_1, idx_obj_1;
-  bool collision_1 = collision.DetectObstacle<PathPoint>(
+  bool collision_1 = collision.DetectObstacle(
       path, obstacles, truck_param, check_trailer, trailer_yaw_init, check_s, interval, idx_path_1, idx_obj_1);
   if (collision_1) {
     cout << "path num : " << idx_path_1 << endl;
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
   int idx_path_2, idx_obj_2;
   bool collision_2 = false;
   for (int i = 0; i < path.size(); ++i) {
-    collision_2 = collision.DetectObstacle<PathPoint>(path[i], obstacles, truck_param, check_trailer, trailer_yaw_init, idx_obj_2);
+    collision_2 = collision.DetectObstacle(path[i], obstacles, truck_param, check_trailer, trailer_yaw_init, idx_obj_2);
     if (collision_2) {
       idx_path_2 = i;
       break;
@@ -129,12 +129,12 @@ int main(int argc, char* argv[]) {
   }
 
   cout << "<<----- test interface 03 ----->>" << endl;
-  double distance_3 = collision.DetectObstacle<PathPoint>(path.front(), obstacles.front(), truck_param, check_trailer, trailer_yaw_init);
+  double distance_3 = collision.DetectObstacle(path.front(), obstacles.front(), truck_param, check_trailer, trailer_yaw_init);
   cout << "distance_3 = " << distance_3 << endl;
 
   cout << "<<----- test interface 04 ----->>" << endl;
   PathPoint wp_truck, wp_obstacle;
-  double distance_4 = collision.DetectObstacle<PathPoint>(path.front(), obstacles.front(), truck_param, check_trailer, trailer_yaw_init, wp_truck, wp_obstacle);
+  double distance_4 = collision.DetectObstacle(path.front(), obstacles.front(), truck_param, check_trailer, trailer_yaw_init, wp_truck, wp_obstacle);
   cout << "distance_4 = " << distance_4 << endl;
   cout << "witness point of truck is (" << wp_truck.x << ", " << wp_truck.y << ")" << endl;
   cout << "witness point of obstacle is (" << wp_obstacle.x << ", " << wp_obstacle.y << ")" << endl;
