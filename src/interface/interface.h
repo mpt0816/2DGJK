@@ -292,17 +292,17 @@ public:
                     truck_param.trailer_wheelbase);
   }
 
-  inline double AABBCollide(const gjk::Polygon& obstacle, 
-                            const VehicleModel& vehicle) {
+  inline bool AABBCollide(const gjk::Polygon& obstacle,
+                          const VehicleModel& vehicle) {
     double p_min_x = std::numeric_limits<double>::max();
     double p_max_x = std::numeric_limits<double>::lowest();
     double p_min_y = std::numeric_limits<double>::max();
     double p_max_y = std::numeric_limits<double>::lowest();
     for (int i = 0; i < obstacle.num_vertex; ++i) {
-      double p_min_x = std::fmin(obstacle.vertices[i][0], p_min_x);
-      double p_max_x = std::fmax(obstacle.vertices[i][0], p_max_x);
-      double p_min_y = std::fmin(obstacle.vertices[i][1], p_min_y);
-      double p_max_y = std::fmax(obstacle.vertices[i][1], p_max_y);
+      p_min_x = std::fmin(obstacle.vertices[i][0], p_min_x);
+      p_max_x = std::fmax(obstacle.vertices[i][0], p_max_x);
+      p_min_y = std::fmin(obstacle.vertices[i][1], p_min_y);
+      p_max_y = std::fmax(obstacle.vertices[i][1], p_max_y);
     }
     return !(p_min_x > vehicle.max_x || p_max_x < vehicle.min_x ||
              p_min_y > vehicle.max_y || p_max_y < vehicle.min_y);

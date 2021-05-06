@@ -90,13 +90,13 @@ void TransformSinglePathToMarker(
 
 int main(int argc, char* argv[]) {
   Path path = GeneratePath();
-  Obstacles obstacles = GenerateObstacles(10);
+  Obstacles obstacles = GenerateObstacles(100);
   toolbox::TruckParam truck_param = GenerateTruckParam();
   double trailer_yaw_init = path.front().theta;
   double check_s = path.back().s;
   double interval = std::hypot(path[1].x - path[0].x, path[1].y - path[0].y);
   bool check_trailer = false;
-  int test_interface = 4; // 1, 2, 3, 4
+  int test_interface = 1; // 1, 2, 3, 4
 
   toolbox::Collision collision;
 
@@ -118,6 +118,7 @@ int main(int argc, char* argv[]) {
     collision_2 = collision.DetectObstacle<PathPoint>(path[i], obstacles, truck_param, check_trailer, trailer_yaw_init, idx_obj_2);
     if (collision_2) {
       idx_path_2 = i;
+      break;
     }
   }
   if (collision_2) {
@@ -330,7 +331,7 @@ void TransformPathToMarker(
   if (path.empty()) {
     return;
   }
-  outputs.header.frame_id = "/gjk";
+  outputs.header.frame_id = "\gjk";
   outputs.header.stamp    = ros::Time::now();
   outputs.lifetime        = ros::Duration();
   outputs.ns              = marker_name;
@@ -374,7 +375,7 @@ void TransformObstaclesToMarkerArray(
   for (int i = 0; i < obstacles.size(); ++i) {
     gjk::Polygon polygon = obstacles.at(i);
     visualization_msgs::Marker output;
-    output.header.frame_id = "/gjk";
+    output.header.frame_id = "\gjk";
     output.header.stamp    = ros::Time::now();
     output.lifetime        = ros::Duration();
     output.ns              = marker_name;
@@ -431,7 +432,7 @@ void TransformHeadToMarkerArray(
   for (int i = 0; i < path.size(); ++i) {
     vehicle.RectangleRep<PathPoint>(path[i]);
     visualization_msgs::Marker output;
-    output.header.frame_id = "/gjk";
+    output.header.frame_id = "\gjk";
     output.header.stamp    = ros::Time::now();
     output.lifetime        = ros::Duration();
     output.ns              = marker_name;
@@ -497,7 +498,7 @@ void TransformTrailerToMarkerArray(
     }
     truck.trailer.RectangleRep<PathPoint>(trailer_pose);
     visualization_msgs::Marker output;
-    output.header.frame_id = "/gjk";
+    output.header.frame_id = "\gjk";
     output.header.stamp    = ros::Time::now();
     output.lifetime        = ros::Duration();
     output.ns              = marker_name;
@@ -548,7 +549,7 @@ void TransformSingleObstacleToMarker(
     visualization_msgs::MarkerArray& outputs) {
   int id = 0;
   visualization_msgs::Marker output;
-  output.header.frame_id = "/gjk";
+  output.header.frame_id = "\gjk";
   output.header.stamp    = ros::Time::now();
   output.lifetime        = ros::Duration();
   output.ns              = marker_name;
@@ -594,7 +595,7 @@ void TransformSingleHeadToMarker(
   int id = 0;
   vehicle.RectangleRep<PathPoint>(pose);
   visualization_msgs::Marker output;
-  output.header.frame_id = "/gjk";
+  output.header.frame_id = "\gjk";
   output.header.stamp    = ros::Time::now();
   output.lifetime        = ros::Duration();
   output.ns              = marker_name;
@@ -639,7 +640,7 @@ void TransformSingleTrailerToMarker(
   trailer_pose = truck.CalTrailerPose<PathPoint>(pose, pose.theta);
   truck.trailer.RectangleRep<PathPoint>(trailer_pose);
   visualization_msgs::Marker output;
-  output.header.frame_id = "/gjk";
+  output.header.frame_id = "\gjk";
   output.header.stamp    = ros::Time::now();
   output.lifetime        = ros::Duration();
   output.ns              = marker_name;
@@ -676,7 +677,7 @@ void TransformSinglePathToMarker(
     std::string marker_name,
     const PathPoint& point,
     visualization_msgs::Marker& outputs) {
-  outputs.header.frame_id = "/gjk";
+  outputs.header.frame_id = "\gjk";
   outputs.header.stamp    = ros::Time::now();
   outputs.lifetime        = ros::Duration();
   outputs.ns              = marker_name;
