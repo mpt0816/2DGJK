@@ -14,7 +14,7 @@ inline double NormalizeAngle(const double angle) {
 }
 
 // return to -from
-inline double DifferentAngle(const double to, const double from) {
+inline double DifferentAngle(const double from, const double to) {
   return NormalizeAngle(to - from);
 }
 

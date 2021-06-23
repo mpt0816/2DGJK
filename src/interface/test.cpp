@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
   double trailer_yaw_init = path.front().theta;
   double check_s = path.back().s;
   double interval = std::hypot(path[1].x - path[0].x, path[1].y - path[0].y);
-  bool check_trailer = false;
+  bool check_trailer = true;
   int test_interface = 1; // 1, 2, 3, 4
 
   toolbox::Collision<PathPoint> collision;
@@ -207,42 +207,18 @@ int main(int argc, char* argv[]) {
   }
 }
 
-Path GeneratePath() {
-  Path path;
-  PathPoint path_point;
-  constexpr int path_point_num = map_max * 2 + 1;
-  auto FuncDistance = [](PathPoint& pt0, PathPoint& pt1) {
-    return std::hypot(pt0.x - pt1.x, pt0.y - pt1.y);
-  };
-  for (int i = 0; i < path_point_num; ++i) {
-    path_point.x     = 0.5 * i;
-    path_point.y     = 0.5 * i;
-    path_point.theta = M_PI_2 / 2.0;
-
-    if (i == 0) {
-      path_point.s = 0.;
-    } else {
-      path_point.s = path[i - 1].s + FuncDistance(path[i - 1], path[i]);
-    }
-    path.push_back(path_point);
-  }
-  return path;
-}
-
 //Path GeneratePath() {
 //  Path path;
 //  PathPoint path_point;
-//  constexpr double step = 2.0;
-//  constexpr double T    = 0.1;
-//  constexpr double K    = 20.0;
-//  int path_point_num = std::floor(map_max / step);
+//  constexpr int path_point_num = map_max * 2 + 1;
 //  auto FuncDistance = [](PathPoint& pt0, PathPoint& pt1) {
 //    return std::hypot(pt0.x - pt1.x, pt0.y - pt1.y);
 //  };
 //  for (int i = 0; i < path_point_num; ++i) {
-//    path_point.x     = step * i;
-//    path_point.y     = K * std::sin(path_point.x * T) + map_max / 2.0;
-//    path_point.theta = std::atan2(K * T * std::cos(path_point.x * T), 1.0);
+//    path_point.x     = 0.5 * i;
+//    path_point.y     = 0.5 * i;
+//    path_point.theta = M_PI_2 / 2.0;
+//
 //    if (i == 0) {
 //      path_point.s = 0.;
 //    } else {
@@ -252,6 +228,30 @@ Path GeneratePath() {
 //  }
 //  return path;
 //}
+
+Path GeneratePath() {
+  Path path;
+  PathPoint path_point;
+  constexpr double step = 2.0;
+  constexpr double T    = 0.1;
+  constexpr double K    = 20.0;
+  int path_point_num = std::floor(map_max / step);
+  auto FuncDistance = [](PathPoint& pt0, PathPoint& pt1) {
+    return std::hypot(pt0.x - pt1.x, pt0.y - pt1.y);
+  };
+  for (int i = 0; i < path_point_num; ++i) {
+    path_point.x     = step * i;
+    path_point.y     = K * std::sin(path_point.x * T) + map_max / 2.0;
+    path_point.theta = std::atan2(K * T * std::cos(path_point.x * T), 1.0);
+    if (i == 0) {
+      path_point.s = 0.;
+    } else {
+      path_point.s = path[i - 1].s + FuncDistance(path[i - 1], path[i]);
+    }
+    path.push_back(path_point);
+  }
+  return path;
+}
 
 Obstacles GenerateObstacles(int num) {
   std::vector<gjk::Polygon> obstacles;
@@ -453,7 +453,7 @@ void TransformHeadToMarkerArray(
       output.color.r = 1.0;
       output.color.g = 1.0;
       output.color.b = 1.0;
-      output.color.a = 0.05;
+      output.color.a = 0.5;
 
       output.scale.x = 0.05;
       output.scale.y = 0.05;
@@ -516,10 +516,10 @@ void TransformTrailerToMarkerArray(
       output.scale.y = 0.25;
       output.scale.z = 0.0;
     } else {
-      output.color.r = 1.0;
+      output.color.r = 0.0;
       output.color.g = 1.0;
-      output.color.b = 1.0;
-      output.color.a = 0.05;
+      output.color.b = 0.0;
+      output.color.a = 0.5;
 
       output.scale.x = 0.05;
       output.scale.y = 0.05;

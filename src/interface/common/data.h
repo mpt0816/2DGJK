@@ -180,43 +180,94 @@ class TruckModel {
   double CalTrailerNextYaw(const T& head_pose_now,
                            const T& head_pose_next,
                            const double trailer_yaw_now) {
-    double L2 = trailer.wheelbase;
-    double d = trailer_base2head_base;
-    double trailer_new_yaw = trailer_yaw_now;
-    double x_now = head_pose_now.x;
-    double y_now = head_pose_now.y;
-    double yaw_now = head_pose_now.theta;
-    double x_next = head_pose_next.x;
-    double y_next = head_pose_next.y;
-    double yaw_next = head_pose_next.theta;
-    double delta_yaw = DifferentAngle(yaw_next, yaw_now);
-    double delta_length = Distance(x_now, y_now, x_next, y_next);
-    if (delta_yaw <= 0.01 || delta_yaw >= -0.01) {
-      // 间隔yaw角太大，则需要分段进行计算, 假定车头按圆弧运动
-      // arc_length: 圆弧总长度
-      // step_arc_length: 每段圆弧长
-      // min_num: 设定的最小分段数
-      int min_num = 5;
-      double arc_length = delta_length / 2.0 / std::sin(std::fabs(delta_yaw / 2.0)) * delta_yaw;
-      double step_arc_length = 0.1;
-      int step_num = std::floor(arc_length / step_arc_length) > min_num ?
-                     std::floor(arc_length / step_arc_length) : min_num;
-      step_arc_length = arc_length / step_num;
-      double step_delta_yaw = delta_yaw / step_num;
-      for (int i = 0; i < step_num; ++i) {
-        double current_step_yaw = yaw_now + step_delta_yaw * i;
-        double trailer_delta_yaw = step_arc_length / L2 * sin(current_step_yaw - trailer_new_yaw) -
-            d * step_delta_yaw / L2 * cos(current_step_yaw - trailer_new_yaw);
-        trailer_new_yaw += trailer_delta_yaw;
-        trailer_new_yaw = NormalizeAngle(trailer_new_yaw);
-      }
+    // Bug from Dor. Chen
+    // double L2 = trailer.wheelbase;
+    // double d = trailer_base2head_base;
+    // double trailer_new_yaw = trailer_yaw_now;
+    // double x_now = head_pose_now.x;
+    // double y_now = head_pose_now.y;
+    // double yaw_now = head_pose_now.theta;
+    // double x_next = head_pose_next.x;
+    // double y_next = head_pose_next.y;
+    // double yaw_next = head_pose_next.theta;
+    // double delta_yaw = DifferentAngle(yaw_next, yaw_now);
+    // double delta_length = Distance(x_now, y_now, x_next, y_next);
+    // if (delta_yaw <= 0.01 || delta_yaw >= -0.01) {
+    //   // 间隔yaw角太大，则需要分段进行计算, 假定车头按圆弧运动
+    //   // arc_length: 圆弧总长度
+    //   // step_arc_length: 每段圆弧长
+    //   // min_num: 设定的最小分段数
+    //   int min_num = 5;
+    //   double arc_length = delta_length / 2.0 / std::sin(std::fabs(delta_yaw / 2.0)) * delta_yaw;
+    //   double step_arc_length = 0.1;
+    //   int step_num = std::floor(arc_length / step_arc_length) > min_num ?
+    //                  std::floor(arc_length / step_arc_length) : min_num;
+    //   step_arc_length = arc_length / step_num;
+    //   double step_delta_yaw = delta_yaw / step_num;
+    //   for (int i = 0; i < step_num; ++i) {
+    //     double current_step_yaw = yaw_now + step_delta_yaw * i;
+    //     double trailer_delta_yaw = step_arc_length / L2 * sin(current_step_yaw - trailer_new_yaw) -
+    //         d * step_delta_yaw / L2 * cos(current_step_yaw - trailer_new_yaw);
+    //     trailer_new_yaw += trailer_delta_yaw;
+    //     trailer_new_yaw = NormalizeAngle(trailer_new_yaw);
+    //   }
+    // } else {
+    //   double trailer_delta_yaw = delta_length / L2 * sin(yaw_now - trailer_new_yaw) -
+    //       d * delta_yaw / L2 * cos(yaw_now - trailer_new_yaw);
+    //   trailer_new_yaw += trailer_delta_yaw;
+    //   trailer_new_yaw = NormalizeAngle(trailer_new_yaw);
+    // }
+    // return trailer_new_yaw;
+
+    double trailer_yaw = trailer_yaw_now;
+    double header_delta_yaw    = DifferentAngle(head_pose_now.theta, head_pose_next.theta);
+    double header_delta_length = Distance(head_pose_now.x, head_pose_now.y,
+                                          head_pose_next.x, head_pose_next.y);
+    if (header_delta_yaw >= 0.01) {
+        double header_radius = header_delta_length / 2.0 / std::sin(std::abs(header_delta_yaw / 2.0));
+        double header_arc_length = header_radius * header_delta_yaw;
+        double step_header_arc_length = 0.1;
+        int step_num = static_cast<int>(std::ceil(header_arc_length / step_header_arc_length));
+        step_header_arc_length = header_arc_length / step_num;
+        double step_header_yaw = header_delta_yaw / step_num;
+        for (int i = 0; i < step_num; ++i) {
+            double cur_step_move_yaw = head_pose_now.theta + step_header_yaw * i;
+            double step_header_move_vx = std::cos(cur_step_move_yaw);
+            double step_header_move_vy = std::sin(cur_step_move_yaw);
+            double trailer_vx          = std::sin(trailer_yaw);
+            double trailer_vy          = -std::cos(trailer_yaw);
+            double trailer_arc_length  = step_header_arc_length *
+                                         std::abs(step_header_move_vx * trailer_vx + step_header_move_vy * trailer_vy) -
+                                         trailer_base2head_base * step_header_yaw *
+                                         std::abs(step_header_move_vy * trailer_vx - step_header_move_vx * trailer_vy);
+            double trailer_delta_yaw = trailer_arc_length / trailer.wheelbase;
+            if (DifferentAngle(cur_step_move_yaw, trailer_yaw) <= 0.0) {
+                trailer_yaw += trailer_delta_yaw;
+                trailer_yaw  = NormalizeAngle(trailer_yaw);
+            } else {
+                trailer_yaw -= trailer_delta_yaw;
+                trailer_yaw  = NormalizeAngle(trailer_yaw);
+            }
+        }
     } else {
-      double trailer_delta_yaw = delta_length / L2 * sin(yaw_now - trailer_new_yaw) -
-          d * delta_yaw / L2 * cos(yaw_now - trailer_new_yaw);
-      trailer_new_yaw += trailer_delta_yaw;
-      trailer_new_yaw = NormalizeAngle(trailer_new_yaw);
+        double header_move_vx = std::cos(head_pose_now.theta);
+        double header_move_vy = std::sin(head_pose_now.theta);
+        double trailer_vx     = std::sin(trailer_yaw);
+        double trailer_vy     = -std::cos(trailer_yaw);
+        double trailer_arc_length = header_delta_length *
+                                    std::abs(header_move_vx * trailer_vx + header_move_vy * trailer_vy) -
+                                    trailer_base2head_base * header_delta_yaw *
+                                    std::abs(header_move_vy * trailer_vx - header_move_vx * trailer_vy);
+        double trailer_delta_yaw = trailer_arc_length / trailer.wheelbase;
+        if (DifferentAngle(head_pose_now.theta, trailer_yaw) <= 0.0) {
+            trailer_yaw += trailer_delta_yaw;
+            trailer_yaw  = NormalizeAngle(trailer_yaw);
+        } else {
+            trailer_yaw -= trailer_delta_yaw;
+            trailer_yaw  = NormalizeAngle(trailer_yaw);
+        }
     }
-    return trailer_new_yaw;
+    return trailer_yaw;
   }
 };
 
