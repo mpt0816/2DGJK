@@ -7,6 +7,7 @@
 #include "stdint.h"
 #include <iostream>
 #include <cmath>
+#include <limits>
 
 namespace gjk {
 
@@ -339,7 +340,7 @@ double Gjk::GjkLevel3(const Polygon& polygon_p,
 // maybe use hill-climbing algorithm
 void Gjk::Support(const Polygon& polygon, const double* direction, double* s) {
   int index = -1;
-  double max_projection = DOTPRODUCT(s, direction);
+  double max_projection = std::numeric_limits<double>::lowest();
   for (int i = 1; i < polygon.num_vertex; ++i) {
     double projection = DOTPRODUCT(polygon.vertices[i], direction);
     if (projection > max_projection) {
